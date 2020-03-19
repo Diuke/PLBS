@@ -1,8 +1,0 @@
-function [ gc ] = LC2GC(x0, enu)
-    geodetic = cart2geo(x0);
-    phi
-    lam
-    h = geodetic()
-    R = []
-end
-

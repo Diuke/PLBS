@@ -1,6 +1,6 @@
 function [ R ] = RotLL2LC( x_lc1, xi, eta )
-    Rx = [1 0 0;0 cos(xi) -sin(xi);0 sin(xi) cos(xi)];
-    Ry = [cos(eta) 0 -sin(eta);0 1 0;sin(eta) 0 cos(eta)];
+    Rx = [1 0 0; 0 1 -xi; 0 xi 1];
+    Ry = [1 0 -eta; 0 1 0; eta 0 1];
     
     xtemp = Ry * Rx * x_lc1;
     alpha = atan(xtemp(2)/xtemp(1));
