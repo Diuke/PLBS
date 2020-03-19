@@ -17,8 +17,8 @@ std_ZLL = 0.15;
 
 BRUN_LL = [0;0;0];
 
-Xi = sex2rad(10.23);
-Eta = sex2rad(9.5);
+Xi = sex2rad(0, 0, 10.23);
+Eta = sex2rad(0, 0, 9.5);
 
 deltaComoBrun_GC = [-1040.168;-72.970;1631.398];
 covDeltaComoBrun_GC = [2e-6 0.5e-6 0.5e-6;0.5e-6 1e-6 0.5e-6;0.5e-6 0.5e-6 2e-6];
@@ -41,6 +41,7 @@ P0002_LC = LL2LC(p0002LL, Rot);
 P0003_LC = LL2LC(p0003LL, Rot);
 
 %-----WF7------
+P0001_GC = Brun_GC - deltaBrunP0001_GC; 
 P0002_GC = LC2GC(Brun_GC, P0002_LC);
 P0003_GC = LC2GC(Brun_GC, P0003_LC);
 
