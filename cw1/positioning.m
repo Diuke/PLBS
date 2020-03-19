@@ -33,8 +33,16 @@ Brun_GC = Como_GC - deltaComoBrun_GC;
 %-----WF3------
 P0001_LC = GC2LC(deltaBrunP0001_GC,Brun_GC);
 
-%-----WF4------
+%-----WF4,5------
+Rot = RotLL2LC( P0001_LC, Xi, Eta );
 
+%-----WF6------
+P0002_LC = LL2LC(p0002LL, Rot);
+P0003_LC = LL2LC(p0003LL, Rot);
+
+%-----WF7------
+P0002_GC = LC2GC(Brun_GC, P0002_LC);
+P0003_GC = LC2GC(Brun_GC, P0003_LC);
 
 
 
