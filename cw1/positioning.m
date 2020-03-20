@@ -28,7 +28,7 @@ deltaBrunP0001_GC = [-51.130;76.749;38.681];
 covDeltaBrunP0001_GC = [1.5e-6 0.3e-6 0.3e-6;0.3e-6 1e-6 0.2e-6;0.3e-6 0.2e-6 2e-6];
 
 %-----WF2------
-Brun_GC = Como_GC - deltaComoBrun_GC;
+Brun_GC = deltaComoBrun_GC + Como_GC;
 
 %% SECTION2
 
@@ -36,14 +36,14 @@ Brun_GC = Como_GC - deltaComoBrun_GC;
 P0001_LC = GC2LC(deltaBrunP0001_GC,Brun_GC);
 
 %-----WF4,5------
-Rot = RotLL2LC( P0001_LC, Xi, Eta );
+Rot = RotLC2LL(P0001_LC, Xi, Eta);
 
 %-----WF6------
 P0002_LC = LL2LC(p0002LL, Rot);
 P0003_LC = LL2LC(p0003LL, Rot);
 
 %-----WF7------
-P0001_GC = Brun_GC - deltaBrunP0001_GC; 
+P0001_GC = deltaBrunP0001_GC + Brun_GC; 
 P0002_GC = LC2GC(Brun_GC, P0002_LC);
 P0003_GC = LC2GC(Brun_GC, P0003_LC);
 vpa(P0001_GC)
@@ -55,10 +55,10 @@ vpa(Brun_GC)
 % Transformation made in website 
 % http://www.epncb.oma.be/_productsservices/coord_trans/index.php
 % From ITRF2014 2019.33 to ETRF2014 2019.33
-P0001_GC_ETRF = [4399397.81010  704145.77860 4548484.42200 ];
-P0002_GC_ETRF = [4399263.21490  704230.23520 4548604.36350 ];
-P0003_GC_ETRF = [4399352.55570  704196.71070 4548517.36080 ];
-BRUN_GC_ETRF = [4399352.55570  704196.71070 4548517.36080 ];
+P0001_GC_ETRF = [4397215.21430  704153.33680 4551824.58020];
+P0002_GC_ETRF = [4397183.09380  704084.32430 4551867.37610];
+P0003_GC_ETRF = [4397272.15960  704050.76910 4551780.10460];
+BRUN_GC_ETRF = [4397266.34430  704076.58780 4551785.89920];
 
 %-----WF9------
 P0001_GEO = vpa(cart2geo(P0001_GC_ETRF')',10)
