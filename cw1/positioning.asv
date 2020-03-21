@@ -69,3 +69,4 @@ P0003_GEO = vpa(cart2geo(P0003_GC_ETRF')',10)
 BRUN_GEO = vpa(cart2geo(BRUN_GC_ETRF')',10)
 
 %-----WF10------
+CovLL = [;;]
