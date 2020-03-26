@@ -6,8 +6,6 @@ p0001LL = [99.9994;0.0;1.0174];
 p0002LL = [80.0;85.0;2.0];
 p0003LL = [-25.0;10.0;-3.0];
 
-cov
-
 COMOx = 4398306.209 + (-0.0145)*(2019.09041096 - 2010.0);
 COMOy = 704149.948 + 0.0181*(2019.09041096 - 2010.0);
 COMOz = 4550154.733 + 0.0113*(2019.09041096 - 2010.0);
@@ -63,9 +61,26 @@ P0003_GC_ETRF = [4397272.15960  704050.76910 4551780.10460];
 BRUN_GC_ETRF = [4397266.34430  704076.58780 4551785.89920];
 
 %-----WF9------
-P0001_GEO = vpa(cart2geo(P0001_GC_ETRF')',10)
-P0002_GEO = vpa(cart2geo(P0002_GC_ETRF')',10)
-P0003_GEO = vpa(cart2geo(P0003_GC_ETRF')',10)
-BRUN_GEO = vpa(cart2geo(BRUN_GC_ETRF')',10)
+P0001_GEO = double(vpa(cart2geo(P0001_GC_ETRF')',10))
+P0002_GEO = double(vpa(cart2geo(P0002_GC_ETRF')',10))
+P0003_GEO = double(vpa(cart2geo(P0003_GC_ETRF')',10))
+BRUN_GEO = double(vpa(cart2geo(BRUN_GC_ETRF')',10))
 
 %-----WF10------
+
+
+%% SECTION3
+name = 'openstreetmap';
+url = 'a.tile.openstreetmap.org';
+copyright = char(uint8(169));
+attribution = copyright + "OpenStreetMap contributors";
+addCustomBasemap(name,url,'Attribution',attribution)
+latitudes = [P0001_GEO(1) P0002_GEO(1) P0003_GEO(1) BRUN_GEO(1)];
+longitudes = [P0001_GEO(2) P0002_GEO(2) P0003_GEO(2) BRUN_GEO(2)];
+colordata = categorical(["P0001" "P0002" "P0003" "BRUN"], ["P0001" "P0002" "P0003" "BRUN"])
+
+gb = geobubble(latitudes, longitudes, null(1), colordata, 'Basemap', 'openstreetmap');
+gb.BubbleWidthRange = 10;
+gb.MapLayout = 'maximized';
+gb.ZoomLevel = 18;
+
