@@ -48,6 +48,7 @@ n = sqrt(GMe/(a^3));
 sat_coord_ORS = zeros(3,length(epoch));
 sat_coord_ITRF = zeros(3,length(epoch));
 sat_coord_GEO = zeros(3,length(epoch));
+vars = zeros(7,length(epoch));
 M = zeros(1,length(epoch));
 eta = zeros(1,length(epoch));
 psi = zeros(1,length(epoch));
@@ -61,13 +62,14 @@ w = zeros(1,length(epoch));
 j = 1;
 %e = sqrt(e);
 
-for dt = 0 : t_step : epoch(500)
+for dt = 0 : t_step : epoch(end)
     %Dt = dt - 86400;
     Dt = dt
     M(j) = M0 + n*Dt;
     eta(j) = ecc_anomaly(M(j), e);
     % compute psi
-    psi(j) = atan((sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e));
+    %psi(j) = atan((sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e));
+    psi(j) = atan2((sqrt(1-e^2)*sin(eta(j))),(cos(eta(j))-e));
     % compute r 
     %r(j) = a*(1 - e*cos(eta(j)));
     r(j) = (a*(1-e^2))/(1 + e*cos(psi(j)));
@@ -75,18 +77,20 @@ for dt = 0 : t_step : epoch(500)
    % sat_coord_ORS(j) = [r(j)*cos(psi(j));r(j)*sin(psi(j));0];
     x(j) = r(j)*cos(psi(j));
     y(j) = r(j)*sin(psi(j));
+    vars(:,j) = [M(j);eta(j);r(j);psi(j);cos(psi(j));sin(psi(j));(sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e)];
     % rotations of the orbital plane with the equatorial plane
     omega(j) = Omega0 + (Omegadot - OmegaEdot)*(Dt - epoch(1));
     i(j) = i0 + idot*(Dt - epoch(1));
     w(j) = w0 + wdot*(Dt - epoch(1));
     % orbital plane with the equatorial plante towards the greenwich meridian
     % rotate from OCRS to ITRF
-    R3_omega = [cos(omega(j)) sin(omega(j)) 0; -sin(omega(j)) cos(omega(j)) 0 ; 0 0 1];
-    R1_i = [1 0 0; 0 cos(i(j)) sin(i(j)); 0 -sin(i(j)) cos(i(j))];
-    R3_w = [cos(w(j)) sin(w(j)) 0; -sin(w(j)) cos(w(j)) 0; 0 0 1];
+    sat_coord_ORS(:,j) = [x(j);y(j);0];
+    R3_omega = [cos(-omega(j)) sin(-omega(j)) 0; -sin(-omega(j)) cos(-omega(j)) 0 ; 0 0 1];
+    R1_i = [1 0 0; 0 cos(-i(j)) sin(-i(j)); 0 -sin(-i(j)) cos(-i(j))];
+    R3_w = [cos(-w(j)) sin(-w(j)) 0; -sin(-w(j)) cos(-w(j)) 0; 0 0 1];
     
     %sat_coord_ITRF(j) = R3_omega*R1_i*R3_w*sat_coord_ORS(j);
-    sat_coord_ITRF(:,j) = R3_omega'*R1_i'*R3_w'*[x(j);y(j);0];
+    sat_coord_ITRF(:,j) = R3_omega*R1_i*R3_w*[x(j);y(j);0];
     
     %Convert X(t), Y(t), Z(t) to phi(t), la(t), r(t)
     sat_coord_GEO(:,j) = cart2geo(sat_coord_ITRF(:,j));
@@ -126,6 +130,9 @@ title(['ellipsoidic height variations [km] around mean height = ' num2str(mean_h
 xlabel('seconds in one day (00:00 - 23:59 = 86400 sec)');
 ylabel('[km]');
 xlim([1 epoch(end)]);
+
+figure(4);
+plot(sat_coord_ITRF(1,:), sat_coord_ITRF(2,:));
 
 
 

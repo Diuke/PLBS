@@ -1,5 +1,7 @@
-clear all
+%clear all
+clc;
 close all
+clear all
 set(0,'DefaultFigureWindowStyle','docked');
 
 % Load Almanac of satellite SVN 63, PRN 01 (Block IIR) for 2016
@@ -23,7 +25,7 @@ OmegaEdot = 7.2921151467D-05;
 
 %initialize vector of epochs
 
-t_step = 600;
+t_step = 30;
 epoch = (0:t_step:86400);
 
 %1) Compute clock offsets and plot it
@@ -31,7 +33,8 @@ syms t;
 
 offset = subs(dt0 + dt1*t + dt2*t^2, t, epoch);
 
-%plot(epoch, offset, '*g');
+figure(1);
+plot(epoch, offset, '*g');
 
 % Initialize vector of positions
 
@@ -45,6 +48,7 @@ n = sqrt(GMe/(a^3));
 sat_coord_ORS = zeros(3,length(epoch));
 sat_coord_ITRF = zeros(3,length(epoch));
 sat_coord_GEO = zeros(3,length(epoch));
+vars = zeros(6,length(epoch));
 M = zeros(1,length(epoch));
 eta = zeros(1,length(epoch));
 psi = zeros(1,length(epoch));
@@ -54,16 +58,18 @@ y = zeros(1,length(epoch));
 omega = zeros(1,length(epoch));
 i = zeros(1,length(epoch));
 w = zeros(1,length(epoch));
-diff_height = zeros(1,length(epoch));
+
 j = 1;
 %e = sqrt(e);
+
 for dt = 0 : t_step : epoch(end)
     %Dt = dt - 86400;
-    Dt = dt;
+    Dt = dt
     M(j) = M0 + n*Dt;
     eta(j) = ecc_anomaly(M(j), e);
     % compute psi
-    psi(j) = atan((sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e));
+    %psi(j) = atan((sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e));
+    psi(j) = atan2((sqrt(1-e^2)*sin(eta(j))),(cos(eta(j))-e));
     % compute r 
     %r(j) = a*(1 - e*cos(eta(j)));
     r(j) = (a*(1-e^2))/(1 + e*cos(psi(j)));
@@ -71,33 +77,37 @@ for dt = 0 : t_step : epoch(end)
    % sat_coord_ORS(j) = [r(j)*cos(psi(j));r(j)*sin(psi(j));0];
     x(j) = r(j)*cos(psi(j));
     y(j) = r(j)*sin(psi(j));
+    vars(:,j) = [eta(j);r(j);psi(j);cos(psi(j));sin(psi(j));(sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e)];
     % rotations of the orbital plane with the equatorial plane
     omega(j) = Omega0 + (Omegadot - OmegaEdot)*(Dt - epoch(1));
     i(j) = i0 + idot*(Dt - epoch(1));
     w(j) = w0 + wdot*(Dt - epoch(1));
     % orbital plane with the equatorial plante towards the greenwich meridian
     % rotate from OCRS to ITRF
-    R3_omega = [cos(-omega(j)) sin(-omega(j)) 0; -sin(-omega(j)) cos(-omega(j)) 0 ; 0 0 1];
-    R1_i = [1 0 0; 0 cos(-i(j)) sin(-i(j)); 0 -sin(-i(j)) cos(-i(j))];
-    R3_w = [cos(-w(j)) sin(-w(j)) 0; -sin(-w(j)) cos(-w(j)) 0; 0 0 1];
+    sat_coord_ORS(:,j) = [x(j);y(j);0];
+    R3_omega = [cos(omega(j)) sin(omega(j)) 0; -sin(omega(j)) cos(omega(j)) 0 ; 0 0 1];
+    R1_i = [1 0 0; 0 cos(i(j)) sin(i(j)); 0 -sin(i(j)) cos(i(j))];
+    R3_w = [cos(w(j)) sin(w(j)) 0; -sin(w(j)) cos(w(j)) 0; 0 0 1];
     
     %sat_coord_ITRF(j) = R3_omega*R1_i*R3_w*sat_coord_ORS(j);
-    sat_coord_ITRF(:,j) = R3_omega*R1_i*R3_w*[x(j);y(j);0];
+    sat_coord_ITRF(:,j) = R3_omega'*R1_i'*R3_w'*[x(j);y(j);0];
     
     %Convert X(t), Y(t), Z(t) to phi(t), la(t), r(t)
     sat_coord_GEO(:,j) = cart2geo(sat_coord_ITRF(:,j));
     
-    diff_height = 20189324.4 - sat_coord_GEO(3,j);
-    
     j = j + 1;
 end
+
+figure(2);
 lats = sat_coord_GEO(1,:);
 lons = sat_coord_GEO(2,:);
+mean_height = mean(sat_coord_GEO(3,:));
+diff_height = mean_height - sat_coord_GEO(3,:);
 
 plot(lons, lats);
 
 %% PLOT
-figure(2);
+figure(3);
 % Plot groundtracks
 subplot(3,1,1:2);
 % axesm Define map axes and set map properties
@@ -115,11 +125,14 @@ axis equal; axis tight;
 
 % Plot height of the satellite 
 subplot(3,1,3);
-plot(epoch(1:10:end), diff_height, '.g');
-title(['ellipsoidic height variations [km] around mean height = ' num2str(mean(##YourVariables) ' km']);
+plot(epoch(1:1:end), diff_height, '.g');
+title(['ellipsoidic height variations [km] around mean height = ' num2str(mean_height) ' km']);
 xlabel('seconds in one day (00:00 - 23:59 = 86400 sec)');
 ylabel('[km]');
 xlim([1 epoch(end)]);
+
+figure(4);
+plot(sin(), cosvars(3,:));
 
 
 
