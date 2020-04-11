@@ -1,0 +1,133 @@
+clear all
+close all
+set(0,'DefaultFigureWindowStyle','docked');
+
+% Load Almanac of satellite SVN 63, PRN 01 (Block IIR) for 2016
+dt0 = -7.661711424589D-05;
+dt1 = -3.183231456205D-12;
+dt2 =  0.000000000000D+00;
+sqrt_a = 5.153650835037D+03;
+e = 3.841053112410D-03;
+M0 = 1.295004883409D+00;
+Omega0 = -2.241692424630D-01;
+Omegadot = -8.386063598924D-09;
+i0 = 9.634782624741D-01;
+idot = -7.286017777600D-11;
+w0 = 9.419793734505D-01;
+wdot = 0.0;
+
+GMe = 3.986005D+14;
+OmegaEdot = 7.2921151467D-05;
+ 
+
+
+%initialize vector of epochs
+
+t_step = 600;
+epoch = (0:t_step:86400);
+
+%1) Compute clock offsets and plot it
+syms t;
+
+offset = subs(dt0 + dt1*t + dt2*t^2, t, epoch);
+
+%plot(epoch, offset, '*g');
+
+% Initialize vector of positions
+
+% Compute positions in ITRF, X, Y, Z
+% Compute mean motion
+a = sqrt_a^2;
+n = sqrt(GMe/(a^3));
+
+
+
+sat_coord_ORS = zeros(3,length(epoch));
+sat_coord_ITRF = zeros(3,length(epoch));
+sat_coord_GEO = zeros(3,length(epoch));
+M = zeros(1,length(epoch));
+eta = zeros(1,length(epoch));
+psi = zeros(1,length(epoch));
+r = zeros(1,length(epoch));
+x = zeros(1,length(epoch));
+y = zeros(1,length(epoch));
+omega = zeros(1,length(epoch));
+i = zeros(1,length(epoch));
+w = zeros(1,length(epoch));
+diff_height = zeros(1,length(epoch));
+j = 1;
+%e = sqrt(e);
+for dt = 0 : t_step : epoch(end)
+    %Dt = dt - 86400;
+    Dt = dt;
+    M(j) = M0 + n*Dt;
+    eta(j) = ecc_anomaly(M(j), e);
+    % compute psi
+    psi(j) = atan((sqrt(1-e^2)*sin(eta(j)))/(cos(eta(j))-e));
+    % compute r 
+    %r(j) = a*(1 - e*cos(eta(j)));
+    r(j) = (a*(1-e^2))/(1 + e*cos(psi(j)));
+    % radius with respect to the center of the ellipse 
+   % sat_coord_ORS(j) = [r(j)*cos(psi(j));r(j)*sin(psi(j));0];
+    x(j) = r(j)*cos(psi(j));
+    y(j) = r(j)*sin(psi(j));
+    % rotations of the orbital plane with the equatorial plane
+    omega(j) = Omega0 + (Omegadot - OmegaEdot)*(Dt - epoch(1));
+    i(j) = i0 + idot*(Dt - epoch(1));
+    w(j) = w0 + wdot*(Dt - epoch(1));
+    % orbital plane with the equatorial plante towards the greenwich meridian
+    % rotate from OCRS to ITRF
+    R3_omega = [cos(-omega(j)) sin(-omega(j)) 0; -sin(-omega(j)) cos(-omega(j)) 0 ; 0 0 1];
+    R1_i = [1 0 0; 0 cos(-i(j)) sin(-i(j)); 0 -sin(-i(j)) cos(-i(j))];
+    R3_w = [cos(-w(j)) sin(-w(j)) 0; -sin(-w(j)) cos(-w(j)) 0; 0 0 1];
+    
+    %sat_coord_ITRF(j) = R3_omega*R1_i*R3_w*sat_coord_ORS(j);
+    sat_coord_ITRF(:,j) = R3_omega*R1_i*R3_w*[x(j);y(j);0];
+    
+    %Convert X(t), Y(t), Z(t) to phi(t), la(t), r(t)
+    sat_coord_GEO(:,j) = cart2geo(sat_coord_ITRF(:,j));
+    
+    diff_height = 20189324.4 - sat_coord_GEO(3,j);
+    
+    j = j + 1;
+end
+lats = sat_coord_GEO(1,:);
+lons = sat_coord_GEO(2,:);
+
+plot(lons, lats);
+
+%% PLOT
+figure(2);
+% Plot groundtracks
+subplot(3,1,1:2);
+% axesm Define map axes and set map properties
+ax = axesm ('eqdcylin', 'Frame', 'on', 'Grid', 'on', 'LabelUnits', 'degrees', 'MeridianLabel', 'on', 'ParallelLabel', 'on', 'MLabelParallel', 'south');
+% geoshow Display map latitude and longitude data 
+%  DISPLAYTYPE can be 'point', 'line', or 'polygon' and defaults to 'line'
+geoshow('landareas.shp', 'FaceColor', 'black');
+hold on
+
+geoshow(lats, lons, 'DisplayType', 'point', 'MarkerEdgeColor', 'green');
+% axis EQUAL  sets the aspect ratio so that equal tick mark
+% increments on the x-,y- and z-axis are equal in size.
+% axis TIGHT  sets the axis limits to the range of the data.
+axis equal; axis tight;
+
+% Plot height of the satellite 
+subplot(3,1,3);
+plot(epoch(1:10:end), diff_height, '.g');
+title(['ellipsoidic height variations [km] around mean height = ' num2str(mean(##YourVariables) ' km']);
+xlabel('seconds in one day (00:00 - 23:59 = 86400 sec)');
+ylabel('[km]');
+xlim([1 epoch(end)]);
+
+
+
+
+
+
+
+
+
+
+
