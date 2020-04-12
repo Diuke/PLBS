@@ -98,16 +98,14 @@ for dt = 0 : t_step : epoch(end)
     j = j + 1;
 end
 
-figure(2);
 lats = sat_coord_GEO(1,:);
 lons = sat_coord_GEO(2,:);
 mean_height = mean(sat_coord_GEO(3,:));
-diff_height = mean_height - sat_coord_GEO(3,:);
+diff_height = sat_coord_GEO(3,:) - mean_height;
 
-plot(lons, lats);
 
 %% PLOT
-figure(3);
+figure(2);
 % Plot groundtracks
 subplot(3,1,1:2);
 % axesm Define map axes and set map properties
@@ -130,10 +128,6 @@ title(['ellipsoidic height variations [km] around mean height = ' num2str(mean_h
 xlabel('seconds in one day (00:00 - 23:59 = 86400 sec)');
 ylabel('[km]');
 xlim([1 epoch(end)]);
-
-figure(4);
-plot(sat_coord_ITRF(1,:), sat_coord_ITRF(2,:));
-
 
 
 
