@@ -1,4 +1,4 @@
-function [phi, lam, h] = cart2geo(x0)
+function [geo] = cart2geo(x0)
     x = x0(1); y = x0(2); z = x0(3);
     f = 1/298.257222101;
     a = 6378137;
@@ -8,9 +8,14 @@ function [phi, lam, h] = cart2geo(x0)
     r = sqrt(x^2 + y^2);
     psi = atan2(z,(r*sqrt(1-e^2)));
     
+    phiC = atan2(z,sqrt(x.^2 + y.^2));
+    
+    r = sqrt(x.^2 + y.^2 + z.^2);
+    
     lam = atan2d(y,x);
     phi = atan2d((z + e2b * b * sin(psi).^3),(r - e^2 * a * cos(psi).^3));
     RN = a/(sqrt(1 - e^2 * sin(deg2rad(phi)).^2));
-    h = r/cos(deg2rad(phi)) - RN;
+    h = r * cos(phiC)/cos(deg2rad(phi)) - RN;
+    geo = [deg2rad(phi);deg2rad(lam);h];
 end
 

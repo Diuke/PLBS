@@ -7,11 +7,16 @@ run('Ex04_variables.m')
 %initialization of parameters
 
 %max number of iterations
-max_iter = 15;
+max_iter = 100;
 %threshold for convergence
-th_convergence = 0.1;
+th_convergence = 0.001;
 %approx coordinates of the receiver and clock offset
+%X_init = [6186437.06 1090835.76 1100265.91 0]; 
+%[ 4407983.9980543227866291999816895, 689466.10703169647604227066040039, 4483441.1969036776572465896606445, 0.019388624933744980777250432879555]
+
 X_init = [0 0 0 0]; 
+%[ 4407983.9981122491881251335144043, 689466.10703275096602737903594971, 4483441.1970008853822946548461914, 0.018877493843114070276589799846079]
+
 % storage of iterate results
 Xr = X_init;
 Xs = xyz_sat;
@@ -24,9 +29,10 @@ for i=1:max_iter
     el = rad2deg(el);
     % approximate geodetic coordinates of the receiver
     
-    [phi, lam, h, phiC]  = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
+    g = cart2geo([Xr(1), Xr(2), Xr(3)]); %= [phi, lam, h, phiC]
+    phi = g(1); lam = g(2); h = g(3);
     % tropospheric and ionospheric corrections
-    tropo = tropo_error(el,h)
+    tropo = tropo_error(el,h);
     iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, []);
     % LS known term
     P0 = pr_C1;
@@ -53,7 +59,8 @@ for i=1:max_iter
     % approximate + estimated correction
 
     %check convergence of the result and, in case exit
-    if max(abs(delta(1:3))) < 1000
+    if max(abs(delta(1:3))) < th_convergence
+        i
         break
     end
     delta_priori = Xr
@@ -63,6 +70,7 @@ for i=1:max_iter
         disp('Convergence failed');
     end
 end
+vpa(Xr)
 
 % final estimated unknowns
 % LS residuals and sigma2
