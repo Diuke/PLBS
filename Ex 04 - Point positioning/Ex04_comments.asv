@@ -25,11 +25,12 @@ for i=1:max_iter
     
     [phi, lam, h, phiC]  = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
     % tropospheric and ionospheric corrections
-    tropo = tropo_error_correction(0, 0, 0, Xs(:,3), el)
+    tropo = tropo_error_correction(0, 0, 0, X, el)
     iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, [])
     % LS known term
     i_vector = ones(m,1);
     delta_p = D + s_light*dtS + tropo + iono;
+    delta_Xr = [X_init(1)-Xr(1);X_init(2)-Xr(2);X_init(3)-Xr(3)];
     E = zeros(m,3);
     for j=1:m
         E(j,1) = 1/D(j) * (Xr(1)-Xs(j,1));
@@ -37,11 +38,11 @@ for i=1:max_iter
         E(j,3) = 1/D(j) * (Xr(3)-Xs(j,3));
     end
     
-    A = [E s_light.*i_vector]
+    A = [E s_light.*i_vector];
     %x_ = [delta_Xr;dtR];
     y_ = delta_p;
     N = A'*A;
-    delta = inv(N)*A'*y_
+    delta = inv(N)*A'*y_;
     
     % LS A matrix
     % Least square solution for the corrections to the apriori

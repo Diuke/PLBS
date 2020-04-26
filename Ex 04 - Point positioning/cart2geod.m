@@ -41,3 +41,6 @@ N = a ./ sqrt(1 - e^2 * sin(phi).^2);
 
 %height
 h = r .* cos(phiC)./cos(phi) - N;
+lam = rad2deg(lam);
+phi = rad2deg(phi);
+phiC = rad2deg(phiC);
