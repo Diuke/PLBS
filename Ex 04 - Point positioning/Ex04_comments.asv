@@ -7,53 +7,57 @@ run('Ex04_variables.m')
 %initialization of parameters
 
 %max number of iterations
-max_iter = 10;
+max_iter = 15;
 %threshold for convergence
 th_convergence = 0.1;
 %approx coordinates of the receiver and clock offset
 X_init = [0 0 0 0]; 
 % storage of iterate results
+Xr = X_init;
 Xs = xyz_sat;
 m = length(xyz_sat);
 % Least squares iteration
 for i=1:max_iter
-    Xr = X_init(1:3);
+    
     % topocentric positions of all satellites
-    [az, el, D] = topocent(Xr, Xs);
+    [az, el, D] = topocent(Xr(1:3), Xs);
     el = rad2deg(el);
     % approximate geodetic coordinates of the receiver
     
     [phi, lam, h, phiC]  = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
     % tropospheric and ionospheric corrections
-    tropo = tropo_error_correction(0, 0, 0, X, el)
-    iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, [])
+    tropo = tropo_error(el, h)
+    iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, []);
     % LS known term
+    P0 = pr_C1;
     i_vector = ones(m,1);
-    delta_p = D + s_light*dtS + tropo + iono;
-    delta_Xr = [X_init(1)-Xr(1);X_init(2)-Xr(2);X_init(3)-Xr(3)];
+    bs = D - s_light.*dtS + tropo + iono;
+    delta_P0 = P0 - bs;
     E = zeros(m,3);
     for j=1:m
         E(j,1) = 1/D(j) * (Xr(1)-Xs(j,1));
         E(j,2) = 1/D(j) * (Xr(2)-Xs(j,2));
         E(j,3) = 1/D(j) * (Xr(3)-Xs(j,3));
     end
-    
+    % LS A matrix
     A = [E s_light.*i_vector];
     %x_ = [delta_Xr;dtR];
-    y_ = delta_p;
+    y_ = delta_P0;
     N = A'*A;
-    delta = inv(N)*A'*y_;
     
-    % LS A matrix
+    delta = inv(N)*A'*y_
+    
+    
     % Least square solution for the corrections to the apriori
     % Estimated coordinates of the receiver: 
     % approximate + estimated correction
 
     %check convergence of the result and, in case exit
-    if max(abs(delta(1:3))) < th_convergence
+    if max(abs(delta(1:3))) < 1000
         break
     end
-    X_init = X_init+delta'
+    delta_priori = Xr
+    Xr = Xr + delta';
     % check at the end that convergence did not fail
     if i == max_iter
         disp('Convergence failed');
@@ -65,14 +69,14 @@ end
 % covariance matrix of the estimated coordinates
 % Rotate and PDOP
 % print results
-i_print = sprintf('The total number of iterations is: %d', i);
-disp(i_print);
-coord_print = sprintf('The coordinates of the receiver are: [%d %d %d]', R_pos);
-disp(coord_print);
-offset_print = sprintf('The clock offset of the receiver is: %d', Xr_est(4));
-disp(offset_print);
-PDOP_print = sprintf('PDOP value is %f', PDOP);
-disp(PDOP_print);
+% i_print = sprintf('The total number of iterations is: %d', i);
+% disp(i_print);
+% coord_print = sprintf('The coordinates of the receiver are: [%d %d %d]', R_pos);
+% disp(coord_print);
+% offset_print = sprintf('The clock offset of the receiver is: %d', Xr_est(4));
+% disp(offset_print);
+% PDOP_print = sprintf('PDOP value is %f', PDOP);
+% disp(PDOP_print);
 
 %%
 
