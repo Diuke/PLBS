@@ -1,4 +1,4 @@
-% Compute the coordinates of a GPS receiver using one epoch of pseudorange
+    % Compute the coordinates of a GPS receiver using one epoch of pseudorange
 % observations and the given position of the satellites in view
 %
 % Meaning of the variables 
@@ -50,7 +50,7 @@ obs_block = [
 
 % Read time of observation
 data   = sscanf(obs_head(1:26),'%f');
-year   = data(1);
+year   = 2016;
 month  = data(2);
 day    = data(3);
 hour   = data(4);

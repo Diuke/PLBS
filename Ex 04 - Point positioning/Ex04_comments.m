@@ -9,13 +9,15 @@ run('Ex04_variables.m')
 %max number of iterations
 max_iter = 100;
 %threshold for convergence
-th_convergence = 0.001;
+th_convergence = 0.0001;
 %approx coordinates of the receiver and clock offset
-%X_init = [6186437.06 1090835.76 1100265.91 0]; 
-%[ 4407983.9980543227866291999816895, 689466.10703169647604227066040039, 4483441.1969036776572465896606445, 0.019388624933744980777250432879555]
+%X_init = [6186437.06 1090835.76 6100265.91 0]; 
+%[ 4407983.9980, 689466.1070, 4483441.1969, 0.0193]
 
 X_init = [0 0 0 0]; 
-%[ 4407983.9981122491881251335144043, 689466.10703275096602737903594971, 4483441.1970008853822946548461914, 0.018877493843114070276589799846079]
+%[ 4407983.9981, 689466.1070, 4483441.1970, 0.018]
+
+% xyz_real = [4407345.9683   700838.7444  4542057.2866];
 
 % storage of iterate results
 Xr = X_init;
@@ -29,11 +31,17 @@ for i=1:max_iter
     el = rad2deg(el);
     % approximate geodetic coordinates of the receiver
     
-    g = cart2geo([Xr(1), Xr(2), Xr(3)]); %= [phi, lam, h, phiC]
-    phi = g(1); lam = g(2); h = g(3);
+    [phi, lam, h, phiC] = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
+    %phi = g(1); lam = g(2); h = g(3);
     % tropospheric and ionospheric corrections
-    tropo = tropo_error(el,h);
-    iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, []);
+    el
+    h
+    tropo = tropo_error(el,h)
+
+    
+    %tropo = 0;
+    iono=zeros(length(el),1);
+    %iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, [])
     % LS known term
     P0 = pr_C1;
     i_vector = ones(m,1);
@@ -51,7 +59,7 @@ for i=1:max_iter
     y_ = delta_P0;
     N = A'*A;
     
-    delta = inv(N)*A'*y_
+    delta = inv(N)*A'*y_;
     
     
     % Least square solution for the corrections to the apriori
@@ -63,7 +71,7 @@ for i=1:max_iter
         i
         break
     end
-    delta_priori = Xr
+    delta_priori = Xr;
     Xr = Xr + delta';
     % check at the end that convergence did not fail
     if i == max_iter
