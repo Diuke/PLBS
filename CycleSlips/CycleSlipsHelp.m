@@ -38,13 +38,39 @@ lam = 19*1e-2; % [m]
 % For each epoch compute differences between observed DDs and approximated
 % DDs (residual DDs) and graph them}
 epochs = idata(:,1);
-residuals = idata(:,2) - idata(:,3);
+observations = idata(:,2);
+baseline_approx = idata(:,3);
+residuals = observations - baseline_approx;
 plot(epochs, residuals);
 
 %% section 2
 % Compute differences between consecutive epochs of residual DDs (hint: diff or for cycle) and graph them
+differences = zeros(1, length(epochs)-1);
+diff_epochs = 1:(length(epochs)-1);
+for i = diff_epochs
+    differences(i) = residuals(i,1) - residuals(i+1,1);
+end
+plot(diff_epochs, differences);
 
-
+%% section 3
 % Identify cycle slips and repair them (hint: just one for cycle with both the actions)
 
+repaired_cs = zeros(1, length(epochs)-1);
+cs_offset = 0;
+for i = diff_epochs
+   if abs(differences(i)) <= threshold
+       dd_corr = differences(i) - lam*cs_offset;
+   else
+       x = differences(i) / lam;
+       if lam*(round(x) - x) <= threshold
+           cs_offset = cs_offset + round(x);
+       end
+       dd_corr = differences(i) - lam*cs_offset;
+       
+   end
+   differences(i) = dd_corr;
+end
+
+%% section 4
 % Graph the corrected DDs, the corrected residuals DDs and their differences in time
+plot(diff_epochs, differences);
