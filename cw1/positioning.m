@@ -53,10 +53,10 @@ P0001_GC = deltaBrunP0001_GC + Brun_GC;
 P0002_GC = LC2GC(Brun_GC, P0002_LC);
 P0003_GC = LC2GC(Brun_GC, P0003_LC);
 %remove ";" to show coordinates to convert to ETRF in website
-vpa(P0001_GC);
-vpa(P0002_GC);
-vpa(P0003_GC);
-vpa(Brun_GC);
+vpa(P0001_GC)
+vpa(P0002_GC)
+vpa(P0003_GC)
+vpa(Brun_GC)
 
 %-----WF8------
 % Transformation made in website 
@@ -123,10 +123,10 @@ name = 'openstreetmap';
 url = 'a.tile.openstreetmap.org';
 copyright = char(uint8(169));
 attribution = copyright + "OpenStreetMap contributors";
-addCustomBasemap(name,url,'Attribution',attribution)
+addCustomBasemap(name,url,'Attribution',attribution);
 latitudes = [P0001_GEO(1) P0002_GEO(1) P0003_GEO(1) BRUN_GEO(1)];
 longitudes = [P0001_GEO(2) P0002_GEO(2) P0003_GEO(2) BRUN_GEO(2)];
-colordata = categorical(["P0001" "P0002" "P0003" "BRUN"], ["P0001" "P0002" "P0003" "BRUN"])
+colordata = categorical(["P0001" "P0002" "P0003" "BRUN"], ["P0001" "P0002" "P0003" "BRUN"]);
 
 gb = geobubble(latitudes, longitudes, null(1), colordata, 'Basemap', 'openstreetmap');
 gb.BubbleWidthRange = 10;
