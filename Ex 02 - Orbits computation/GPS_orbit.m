@@ -64,7 +64,7 @@ j = 1;
 
 for dt = 0 : t_step : epoch(end)
     %Dt = dt - 86400;
-    Dt = dt
+    Dt = dt;
     M(j) = M0 + n*Dt;
     eta(j) = ecc_anomaly(M(j), e);
     % compute psi

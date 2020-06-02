@@ -38,11 +38,11 @@ for i=1:max_iter
    
     %tropo = 0;
     iono=zeros(length(el),1);
-    iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, []);
+    %iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, [])
     % LS known term
     P0 = pr_C1;
     i_vector = ones(m,1);
-    bs = D - s_light.*dtS + tropo;% + iono;
+    bs = D - s_light.*dtS;% + tropo + iono;
     delta_P0 = P0 - bs;
     E = zeros(m,3);
     for j=1:m

@@ -43,7 +43,7 @@ prev_id(first_id) = first_id;
 visited_id = zeros(size(node));
  % id_to_visit: nodes that can be (costs already estimated) visited / explored: at the beginning only the departure
 id_to_visit = [ first_id ];
-all(visited_id)
+
 while ~all(visited_id) % something exists to check: for example until the arrival has been visited / explored
     min_id = 0;
     min_size = Inf;
@@ -65,8 +65,7 @@ while ~all(visited_id) % something exists to check: for example until the arriva
        end
     end
 end
-ttn
-prev_id
+
 
 current = final_id;
 path = [];
@@ -75,6 +74,9 @@ while current ~= first_id
     current = prev_id(current);
 end
 path = [node(current), path];
+fprintf('The shortest path from Milan to Kyoto is: \n');
 path
-ttn(final_id)
+final_cost=ttn(final_id);
+fprintf('The shortest path from Milan to Kyoto costs: %d \n', final_cost);
+
 
