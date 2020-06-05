@@ -9,15 +9,19 @@ run('Ex04_variables.m')
 %max number of iterations
 max_iter = 100;
 %threshold for convergence
-th_convergence = 0.0001;
+th_convergence = 0.1;
 %approx coordinates of the receiver and clock offset
 %X_init = [6186437.06 1090835.76 6100265.91 0]; 
 %[ 4407983.9980, 689466.1070, 4483441.1969, 0.0193]
 
-X_init = [0 0 0 0]; 
+X_init = [ 0,0,0,0]; 
 %[ 4407983.9981, 689466.1070, 4483441.1970, 0.018]
 
-% xyz_real = [4407345.9683   700838.7444  4542057.2866];
+% xyz_real =    [4407345.9683   700838.7444  4542057.2866];
+%with tropo-iono[4407983.9977460429072380065917969, 689466.1070261170389130711555481, 4483441.1963863326236605644226074, 0.020861414756313114565733357608224]
+%only tropo     [4407381.4354982804507017135620117, 700841.25238080474082380533218384, 4542077.2566848732531070709228516, 0.0074693469653422479501148067981831]
+%               [4407381.4355508321896195411682129, 700841.25249385985080152750015259, 4542077.2566507039591670036315918, 0.0068365843831159614149561853935211]
+
 
 % storage of iterate results
 Xr = X_init;
@@ -34,15 +38,20 @@ for i=1:max_iter
     [phi, lam, h, phiC] = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
     %phi = g(1); lam = g(2); h = g(3);
     % tropospheric and ionospheric corrections
-     tropo = tropo_error(el,h);
+    if i > 2 
+        tropo = tropo_error(el,h)
+    else
+        tropo = zeros(length(el),1);
+    end
+     
    
     %tropo = 0;
-    iono=zeros(length(el),1);
-    iono = iono_error_correction(phi, lam, az, el, time_rx, ionoparams, []);
+    %iono=zeros(length(el),1);
+    iono = iono_error(phi, lam, az, el, time_rx, ionoparams)
     % LS known term
     P0 = pr_C1;
     i_vector = ones(m,1);
-    bs = D - s_light.*dtS + tropo;% + iono;
+    bs = D - s_light.*dtS + tropo + iono;
     delta_P0 = P0 - bs;
     E = zeros(m,3);
     for j=1:m
@@ -64,18 +73,23 @@ for i=1:max_iter
     % approximate + estimated correction
 
     %check convergence of the result and, in case exit
+    i
     if max(abs(delta(1:3))) < th_convergence
-        i
         break
     end
     delta_priori = Xr;
     Xr = Xr + delta';
+    vpa(Xr)
     % check at the end that convergence did not fail
     if i == max_iter
         disp('Convergence failed');
     end
 end
+
+error = 
+
 vpa(Xr)
+
 
 % final estimated unknowns
 % LS residuals and sigma2
@@ -91,7 +105,18 @@ vpa(Xr)
 % PDOP_print = sprintf('PDOP value is %f', PDOP);
 % disp(PDOP_print);
 
-%%
+%% covariance
+denominator = 11-4;
+
+
+%% pdop
+Qxx = inv(N);
+Qxx = Qxx(1:3,1:3);
+diagQxx = diag(Qxx);
+[pdop_phi, pdop_lambda, pdop_h, pdop_phic]= cart2geod(diagQxx(1),diagQxx(2),diagQxx(3));
+R_LC = R_GCtoLC(pdop_phi, pdop_lambda);
+Qxx_ENU = R_LC*Qxx*R_LC';
+pdop = sqrt(sum(diag(Qxx_ENU)))
 
 %% repeat with CutOfAngle
 
