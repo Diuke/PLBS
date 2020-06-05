@@ -1,5 +1,5 @@
-clc
-clear all
+clc;
+clear all;
 
 %getting obs values
 run('Ex04_variables.m')
@@ -11,13 +11,10 @@ max_iter = 100;
 %threshold for convergence
 th_convergence = 0.1;
 %approx coordinates of the receiver and clock offset
-%X_init = [6186437.06 1090835.76 6100265.91 0]; 
-%[ 4407983.9980, 689466.1070, 4483441.1969, 0.0193]
 
 X_init = [ 0,0,0,0]; 
-%[ 4407983.9981, 689466.1070, 4483441.1970, 0.018]
 
-% xyz_real =    [4407345.9683   700838.7444  4542057.2866];
+xyz_real =    [4407345.9683   700838.7444  4542057.2866];
 %with tropo-iono[4407983.9977460429072380065917969, 689466.1070261170389130711555481, 4483441.1963863326236605644226074, 0.020861414756313114565733357608224]
 %only tropo     [4407381.4354982804507017135620117, 700841.25238080474082380533218384, 4542077.2566848732531070709228516, 0.0074693469653422479501148067981831]
 %               [4407381.4355508321896195411682129, 700841.25249385985080152750015259, 4542077.2566507039591670036315918, 0.0068365843831159614149561853935211]
@@ -39,19 +36,16 @@ for i=1:max_iter
     %phi = g(1); lam = g(2); h = g(3);
     % tropospheric and ionospheric corrections
     if i > 2 
-        tropo = tropo_error(el,h)
+        tropo = tropo_error(el,h);
     else
         tropo = zeros(length(el),1);
-    end
-     
+    end    
    
-    %tropo = 0;
-    %iono=zeros(length(el),1);
-    iono = iono_error(phi, lam, az, el, time_rx, ionoparams)
+    iono = iono_error(phi, lam, az, el, time_rx, ionoparams);
     % LS known term
     P0 = pr_C1;
     i_vector = ones(m,1);
-    bs = D - s_light.*dtS + tropo + iono;
+    bs = D - s_light.*dtS;% + tropo + iono;
     delta_P0 = P0 - bs;
     E = zeros(m,3);
     for j=1:m
@@ -64,59 +58,77 @@ for i=1:max_iter
     %x_ = [delta_Xr;dtR];
     y_ = delta_P0;
     N = A'*A;
-    
-    delta = inv(N)*A'*y_;
-    
-    
     % Least square solution for the corrections to the apriori
-    % Estimated coordinates of the receiver: 
-    % approximate + estimated correction
-
+    delta = inv(N)*A'*y_;   
     %check convergence of the result and, in case exit
-    i
     if max(abs(delta(1:3))) < th_convergence
         break
     end
+    % Estimated coordinates of the receiver:
     delta_priori = Xr;
+    % approximate + estimated correction
     Xr = Xr + delta';
-    vpa(Xr)
     % check at the end that convergence did not fail
     if i == max_iter
         disp('Convergence failed');
     end
 end
 
-error = 
-
-vpa(Xr)
 
 
+
+% covariance
+
+%Use only the 3x3 matrix of N
+newN= N(1:3,1:3);
+%Computation of residuals, real positions with respect to estimated ones
+residuals = xyz_real-Xr(1:3);
+sigma2 = residuals'*residuals/(m-4);
+Cxx = sigma2*inv(newN);
+
+% pdop
+%Qxx = N^-1
+Qxx = inv(newN);
+diagQxx = diag(Qxx);
+[pdop_phi, pdop_lambda, pdop_h, pdop_phic]= cart2geod(diagQxx(1),diagQxx(2),diagQxx(3));
+%Rotation matrix from GC to LC
+R_LC = R_GCtoLC(pdop_phi, pdop_lambda);
+Qxx_ENU = R_LC*Qxx*R_LC';
+pdop = sqrt(sum(diag(Qxx_ENU)));
+
+estimates = vpa(Xr);
 % final estimated unknowns
+fprintf('Final estimated unknowns: [');
+fprintf('%g ', estimates);
+fprintf(']\n');
 % LS residuals and sigma2
+fprintf('LS residuals: [');
+fprintf('%g ', residuals);
+fprintf(']\n');
+fprintf('Sigma2: [');
+fprintf('%g ', sigma2);
+fprintf(']\n');
 % covariance matrix of the estimated coordinates
+fprintf('Covariance matrix of the estimated coordinates: [');
+fprintf('%g ', Cxx);
+fprintf(']\n');
 % Rotate and PDOP
+fprintf('Rotation matrix to LC: [');
+fprintf('%g ', R_LC);
+fprintf(']\n');
+fprintf('PDOP: [');
+fprintf('%g ', pdop);
+fprintf(']\n');
 % print results
-% i_print = sprintf('The total number of iterations is: %d', i);
-% disp(i_print);
+fprintf('The total number of iterations was: %d \n', i);
+
+
 % coord_print = sprintf('The coordinates of the receiver are: [%d %d %d]', R_pos);
 % disp(coord_print);
 % offset_print = sprintf('The clock offset of the receiver is: %d', Xr_est(4));
 % disp(offset_print);
 % PDOP_print = sprintf('PDOP value is %f', PDOP);
 % disp(PDOP_print);
-
-%% covariance
-denominator = 11-4;
-
-
-%% pdop
-Qxx = inv(N);
-Qxx = Qxx(1:3,1:3);
-diagQxx = diag(Qxx);
-[pdop_phi, pdop_lambda, pdop_h, pdop_phic]= cart2geod(diagQxx(1),diagQxx(2),diagQxx(3));
-R_LC = R_GCtoLC(pdop_phi, pdop_lambda);
-Qxx_ENU = R_LC*Qxx*R_LC';
-pdop = sqrt(sum(diag(Qxx_ENU)))
 
 %% repeat with CutOfAngle
 
