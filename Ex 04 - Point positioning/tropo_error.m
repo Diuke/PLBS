@@ -33,8 +33,5 @@ function [tropo] = tropo_error(h, el)
      
         %tropo delay
         tropo = (0.002277/sin(el))*(Pr + (1255/Tr + 0.05)*er - tan(el)^-2);
-        
-        
-    end
 
 end
