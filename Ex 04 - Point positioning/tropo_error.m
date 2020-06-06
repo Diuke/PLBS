@@ -1,17 +1,40 @@
-function [error] = tropo_error(eta,ellipsoidal_height)
-    error = zeros(length(eta),1);
-    if ellipsoidal_height < -200 || ellipsoidal_height > 10000
-        return
-    end
-    Hr = 0.0; %/* [m] */
-    Pr = 1013.25; %/* [mb] */
-    Tr =18; %/* [°C] */
-    hr= 0.5; % /* [%-->50%] */                     
-    P = (Pr) * mpower(1 - 0.0000226*(ellipsoidal_height - Hr),5.225);
-    T = (Tr) - 0.0065*(ellipsoidal_height-(Hr)); %  /* [C] */
-    h = (hr) * exp(-0.0006396*(ellipsoidal_height-(Hr)));
-    error = (0.002277./sin(eta)) .* (P + (1255./(T+273.15) + 0.05).*h - 1./(tan(eta).^2));
-    
-    
-end
+function [tropo] = tropo_error(h, el)
 
+%   Saastamoinen model computation.
+
+    if h > 5000
+        tropo = 0;
+    else
+        %if heigth is less than -200, h = -200
+        h = max(-200,h);
+        
+        %conversion to radians
+        el = abs(el) * pi/180;
+
+        % Standard values
+        PRES = 1013.25;                           % pressure 
+        TEMP = 291.15;                            % temperature 
+        HUMI = 50.0;                              % humidity 
+
+
+        %temperature
+        T = TEMP;
+        Tr = T - 0.0065*h;
+
+        %humidity
+        H = HUMI;
+        Hr = H * exp(-0.0006396*h);
+       
+        %pressure
+        P = PRES;
+        Pr = P*(1-0.0000226*h)^5.225;
+
+        er = 0.01*Hr*exp(-37.2465 + 0.213166*Tr - 0.000256908*Tr^2);
+     
+        %tropo delay
+        tropo = (0.002277/sin(el))*(Pr + (1255/Tr + 0.05)*er - tan(el)^-2);
+        
+        
+    end
+
+end

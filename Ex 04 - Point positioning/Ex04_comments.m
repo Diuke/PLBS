@@ -31,27 +31,30 @@ m = length(xyz_sat);
 for i=1:max_iter
     
     % topocentric positions of all satellites
-    [az, el, D] = topocent(Xr(1:3), Xs);
-    el = rad2deg(el);
+    
     % approximate geodetic coordinates of the receiver
     
     [phi, lam, h, phiC] = cart2geod(Xr(1), Xr(2), Xr(3)); %= [phi, lam, h, phiC]
     %phi = g(1); lam = g(2); h = g(3);
     % tropospheric and ionospheric corrections
-    if i > 2 
-        tropo = tropo_error(el,h)
-    else
-        tropo = zeros(length(el),1);
+    tropo = zeros(m,1);
+    az = zeros(m,1);
+    el = zeros(m,1);
+    D = zeros(m,1);
+    
+    for k = 1:m
+        [az(k), el(k), D(k)] = topocent(Xr(1:3), Xs(k,(1:3)));
+        tropo(k) = tropo_error(h, el(k));
     end
-     
+    tropo
    
     %tropo = 0;
     %iono=zeros(length(el),1);
-    iono = iono_error(phi, lam, az, el, time_rx, ionoparams)
+    iono = iono_error(phi, lam, az, el, time_rx, ionoparams);
     % LS known term
     P0 = pr_C1;
     i_vector = ones(m,1);
-    bs = D - s_light.*dtS + tropo + iono;
+    bs = D - s_light*dtS + tropo + iono;
     delta_P0 = P0 - bs;
     E = zeros(m,3);
     for j=1:m
@@ -60,33 +63,26 @@ for i=1:max_iter
         E(j,3) = 1/D(j) * (Xr(3)-Xs(j,3));
     end
     % LS A matrix
-    A = [E s_light.*i_vector];
+    A = [E i_vector];
     %x_ = [delta_Xr;dtR];
     y_ = delta_P0;
     N = A'*A;
     
-    delta = inv(N)*A'*y_;
-    
-    
-    % Least square solution for the corrections to the apriori
-    % Estimated coordinates of the receiver: 
-    % approximate + estimated correction
+    delta = N\(A'*y_);
+    Xr = [Xr(1:3) 0] + delta';
 
-    %check convergence of the result and, in case exit
     i
-    if max(abs(delta(1:3))) < th_convergence
+    if norm(delta(1:3)) < th_convergence
         break
     end
-    delta_priori = Xr;
-    Xr = Xr + delta';
+    
+    
     vpa(Xr)
     % check at the end that convergence did not fail
     if i == max_iter
         disp('Convergence failed');
     end
 end
-
-error = 
 
 vpa(Xr)
 
@@ -110,8 +106,8 @@ denominator = 11-4;
 
 
 %% pdop
+N = N(1:3,1:3);
 Qxx = inv(N);
-Qxx = Qxx(1:3,1:3);
 diagQxx = diag(Qxx);
 [pdop_phi, pdop_lambda, pdop_h, pdop_phic]= cart2geod(diagQxx(1),diagQxx(2),diagQxx(3));
 R_LC = R_GCtoLC(pdop_phi, pdop_lambda);
@@ -121,7 +117,7 @@ pdop = sqrt(sum(diag(Qxx_ENU)))
 %% repeat with CutOfAngle
 
 CutOfAngle = 5;
-
+Xr = X_init;
 % extract satellites above cut off
 for j=1:n_sat
     if El_co(j) > CutOfAngle
