@@ -43,6 +43,7 @@ baseline_approx = idata(:,3)';
 differences = observations - baseline_approx;
 figure;
 plot(epochs, differences);
+title('Double differences');
 
 %% section 2
 % Compute differences between consecutive epochs of residual DDs (hint: diff or for cycle) and graph them
@@ -50,20 +51,22 @@ diff_epochs = 1:(length(epochs)-1);
 residuals = diff(differences);
 figure;
 plot(diff_epochs, residuals);
+title('Differences betweeen epochs of residual DDs');   
 
 %% section 3
 % Identify cycle slips and repair them (hint: just one for cycle with both the actions
-
+residuals1 = residuals;
+differences1 = differences;
 for i = 1:length(diff_epochs)
-    if abs(residuals(i)) > threshold
-        x = residuals(i) / lam;
+    if abs(residuals1(i)) > threshold
+        x = residuals1(i) / lam;
         n = round(x);
         if lam*abs(n - x) <= threshold
             for j = (i+1):length(observations)
                 observations(j) = observations(j) - lam*n;
             end
-            differences = observations - baseline_approx;
-            residuals = diff(differences);
+            differences1 = observations - baseline_approx;
+            residuals1 = diff(differences1);
         end   
     end
 end
@@ -71,6 +74,23 @@ end
 %% section 4
 % Graph the corrected DDs, the corrected residuals DDs and their differences in time
 figure;
-plot(diff_epochs, residuals); hold on;
-plot(diff_epochs, residuals, '.g');
-plot(diff_epochs, residuals, '-g');
+plot(epochs, differences1);
+title('Corrected DDs');
+
+figure;
+title('Corrected residuals in time');
+hold on;
+plot(diff_epochs, residuals1, '.g');
+plot(diff_epochs, residuals1, '-g');
+
+figure;
+deltaDiff = differences - differences1;
+plot(epochs, deltaDiff);
+
+figure;
+deltaRes = residuals - residuals1;
+plot(diff_epochs, deltaRes);
+
+
+
+
